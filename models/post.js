@@ -7,13 +7,15 @@ const Schema = mongoose.Schema
 
 const PostSchema = new Schema({
   title: { type: String, required: true },
-  author: { type: Schema.Types.ObjectId, ref: 'User', required: true},
+  author: { type: String, ref: 'User', required: true},
   previewText: { type: String, required: true},
   content: { type: String, required: true },
   isPublished: { type: Boolean, required: true },
   datePublished: { type: Date, required: true },
   dateUpdated: { type: Date, required: true },
   keywords: [{ type: String, ref: 'Keyword' }]
+}, {
+  toObject: { virtuals: true }
 })
 
 PostSchema
