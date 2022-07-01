@@ -12,8 +12,7 @@ const PostSchema = new Schema({
   content: { type: String, required: true },
   isPublished: { type: Boolean, required: true },
   datePublished: { type: Date, required: true },
-  dateUpdated: { type: Date, required: true },
-  keywords: [{ type: String, ref: 'Keyword' }]
+  dateUpdated: { type: Date, required: true }
 }, {
   toObject: { virtuals: true }
 })
@@ -46,6 +45,12 @@ PostSchema
 .virtual('dateUpdatedFormatted')
 .get(function () {
   return 'A formatted update date (not implemented yet)'
+})
+
+PostSchema
+.virtual('yearAndMonthPublished')
+.get(function () {
+  return day(this.datePublished).format('MMMM YYYY')
 })
 
 module.exports = mongoose.model('Post', PostSchema)

@@ -1,5 +1,7 @@
 const express = require('express')
 
+const verifyToken = require('../config/verifyToken')
+
 const postsController = require('../controllers/postsController')
 
 const router = express.Router()
@@ -8,12 +10,16 @@ router.get('/archive', postsController.getArchive)
 
 router.get('/recent', postsController.getRecentPosts)
 
-router.get('/:id', postsController.getPost)
+router.get('/postinfo/:id', postsController.getPost)
 
-router.post('/', postsController.createPost)
+router.post('/new', verifyToken, postsController.createPost)
 
-router.put('/:id', postsController.updatePost)
+router.put('/postinfo/:id', verifyToken, postsController.updatePost)
 
-router.delete('/:id', postsController.deletePost)
+router.put('/publish/:id', verifyToken, postsController.publishPost)
+
+router.put('/unpublish/:id', verifyToken, postsController.unpublishPost)
+
+router.delete('/:id', verifyToken, postsController.deletePost)
 
 module.exports = router

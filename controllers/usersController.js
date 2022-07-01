@@ -151,6 +151,38 @@ module.exports.updateUser = [
   }
 ]
 
-module.exports.deleteUser = (req, res, next) => {
-  res.send('NOT IMPLEMENTED: Delete user')
-}
+module.exports.deleteUser = [
+  (req, res, next) => {
+    jwt.verify(req.token, process.env.JWT_KEY, (err, result) => {
+      if (err) return res.status(400).send({ userWasDeleted: false, message: 'Could not verify credentials'})
+      req.authData = result
+      next()
+    })
+  },
+  param('id').exists().trim().escape(),
+  body('password').trim().isLength({ min: 6 }).escape(),
+  (req, res, next) => {
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) {
+      return res.status(400).send({ userWasDeleted: false, message: 'Validation failed' })
+    }
+    if (req.authData.userId !== req.params.id) {
+      return res.status(403).send({ userWasDeleted: false, message: 'Action forbidden' })
+    }
+    User
+    .findOne({ '_id': req.params.id })
+    .exec((err, result) => {
+      if (err) return next(err)
+      bcrypt.compare(req.body.password, result.password, (err, success) => {
+        if (err) return next(err)
+        if (!success) return res.status(403).send({ userWasDeleted: false, message: 'Invalid password' })
+        User
+        .findOneAndDelete({ '_id': req.params.id})
+        .exec((err, result) => {
+          if (err) return next(err)
+          return res.status(200).send({ userWasDeleted: true, message: 'User was deleted', deletedUser: result })
+        })
+      })
+    })
+  }
+]
