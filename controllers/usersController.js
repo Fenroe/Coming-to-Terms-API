@@ -31,7 +31,8 @@ module.exports.getUser = [
         } else {
           const userData = {
             username: results.userData.username,
-            bio: results.userData.bio
+            bio: results.userData.bio,
+            isContributor: results.userData.isContributor
           }
           const drafts = []
           const published = []
@@ -39,7 +40,7 @@ module.exports.getUser = [
             if (post.isPublished) {
               published.push(post)
             } else {
-              drafts.push(draft)
+              drafts.push(post)
             }
           })
           return res.status(200).send({
@@ -118,7 +119,7 @@ module.exports.login = [
             email: result.email,
             isContributor: result.isContributor
           }, process.env.JWT_KEY)
-          return res.status(200).send({loginWasSuccessful: true, message: 'Auth successful', token, username: result.username})
+          return res.status(200).send({loginWasSuccessful: true, message: 'Auth successful', token, username: result.username, isContributor: result.isContributor })
         })
       })
     }

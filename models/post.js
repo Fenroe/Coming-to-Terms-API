@@ -6,10 +6,10 @@ day.extend(relativeTime)
 const Schema = mongoose.Schema
 
 const PostSchema = new Schema({
-  title: { type: String, required: true },
+  title: { type: String },
   author: { type: String, ref: 'User', required: true},
-  previewText: { type: String, required: true},
-  content: { type: String, required: true },
+  previewText: { type: String },
+  content: { type: String },
   isPublished: { type: Boolean, required: true },
   datePublished: { type: Date, required: true },
   dateUpdated: { type: Date, required: true }

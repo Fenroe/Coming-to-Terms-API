@@ -57,10 +57,12 @@ module.exports.createPost = [
     jwt.verify(req.token, process.env.JWT_KEY, (err, result) => {
       if (err) return res.status(400).send({ postWasCreated: false, message: 'Could not verify credentials' })
       req.authData = result
+      console.log(result)
       next()
     })
   },
   body('username').trim().notEmpty().escape(),
+  body('title').trim().notEmpty().escape(),
   (req, res, next) => {
     const errors = validationResult(req)
     if (!errors.isEmpty()) {
@@ -70,7 +72,7 @@ module.exports.createPost = [
       return res.status(403).send({ postWasCreated: false, message: 'Action forbidden' })
     }
     const post = new Post({
-      title: '',
+      title: req.body.title,
       author: req.body.username,
       previewText: '',
       content: '',
@@ -85,7 +87,7 @@ module.exports.createPost = [
   }
 ]
 
-module.exports.updatePost = (req, res, next) => {
+module.exports.updatePost = [
   (req, res, next) => {
     jwt.verify(req.token, process.env.JWT_KEY, (err, result) => {
       if (err) return res.status(400).send({ postWasUpdated: false, message: 'Could not verify credentials' })
@@ -107,7 +109,6 @@ module.exports.updatePost = (req, res, next) => {
     Post
     .findOneAndUpdate({'_id': req.body.postId}, {
       'title': req.body.title,
-      'author': req.body.username,
       'previewText': req.body.previewText,
       'content': sanitizeHtml(req.body.content, { allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img'])}),
       'dateUpdated': new Date()
@@ -117,7 +118,7 @@ module.exports.updatePost = (req, res, next) => {
       return res.status(200).send({ postWasUpdated: true, message: 'Post was updated' })
     })
   }
-}
+]
 
 module.exports.publishPost = [
   (req, res, next) => {
