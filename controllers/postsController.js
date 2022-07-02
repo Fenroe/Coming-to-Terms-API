@@ -138,7 +138,7 @@ module.exports.publishPost = [
       return res.status(403).send({ postWasPublished: false, message: 'Action forbidden' })
     }
     Post
-    .findOneAndUpdate({ '_id':req.body.postId }, {
+    .findOneAndUpdate({ '_id':req.params.id }, {
       'isPublished': true
     })
     .exec((err, result) => {
@@ -166,7 +166,7 @@ module.exports.unpublishPost = [
       return res.status(403).send({ postWasUnpublished: false, message: 'Action forbidden' })
     }
     Post
-    .findOneAndUpdate({ '_id':req.body.postId }, {
+    .findOneAndUpdate({ '_id':req.params.id }, {
       'isPublished': false
     })
     .exec((err, result) => {

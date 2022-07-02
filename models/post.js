@@ -14,7 +14,8 @@ const PostSchema = new Schema({
   datePublished: { type: Date, required: true },
   dateUpdated: { type: Date, required: true }
 }, {
-  toObject: { virtuals: true }
+  toObject: { virtuals: true },
+  toJSON: { virtuals: true }
 })
 
 PostSchema
@@ -32,7 +33,7 @@ PostSchema
 PostSchema
 .virtual('datePublishedFormatted')
 .get(function () {
-  return `Hello`
+  return `${day(this.datePublished).format('MMMM D YYYY')}`
 })
 
 PostSchema
