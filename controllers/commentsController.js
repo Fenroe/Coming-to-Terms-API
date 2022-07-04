@@ -3,12 +3,27 @@ const jwt = require('jsonwebtoken')
 const { body, validationResult } = require('express-validator')
 
 module.exports.getComment = (req, res, next) => {
+  if (!req.params.id.match(/^[0-9a-fA-F]{24}$/)) return next()
+  // it's a valid ObjectId, proceed with call.
   Comment
   .findOne({ '_id': req.params.id })
   .populate('author', 'post')
   .exec((err, result) => {
     if (err) return next(err)
     return res.status(400).send({ commentWasFound: true, message: 'Comment was found', comment: result })
+  })
+}
+
+module.exports.getPostComments = (req, res, next) => {
+  if (!req.params.id.match(/^[0-9a-fA-F]{24}$/)) return next()
+  // it's a valid ObjectId, proceed with call.
+  Comment
+  .find({ 'post': req.params.id})
+  .populate('author', 'post')
+  .sort({ 'dateCommented': -1})
+  .exec((err, result) => {
+    if (err) return next(err)
+    return res.status(200).send({ commentsWereFound: true, message: 'Comments found', comments: result })
   })
 }
 
