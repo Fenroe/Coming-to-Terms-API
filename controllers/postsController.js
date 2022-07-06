@@ -1,33 +1,32 @@
 const Post = require('../models/post')
-const User = require('../models/user')
-const Comment = require('../models/comment')
 const jwt = require('jsonwebtoken')
 const sanitizeHtml = require('sanitize-html')
 
-const { body, validationResult } = require('express-validator')
+const { body, param, validationResult } = require('express-validator')
 const async = require('async')
 
-module.exports.getPost = (req, res, next) => {
-
-  async.parallel({
-    post: (callback) => {
-      Post
-      .findOne({ '_id' : req.params.id })
-      .populate('author')
-      .exec(callback)
-    },
-    postComments: (callback) => {
-      Comment
-      .find({ 'post' : req.params.id })
-      .populate('author', 'post')
-      .sort({ 'dateCommented': -1 })
-      .exec(callback)
+module.exports.getPost = [
+  param('id').custom((value) => {
+    if (!value.match(/^[0-9a-fA-F]{24}$/)) {
+      return Promise.reject('Value not a MongoDB objectid and will not be parsed')
+    } else {
+      return true
     }
-  }, (err, results) => {
-    if (err) return next(err)
-    return res.status(200).send({ postWasFound: true, message: 'Post was found', post: results.post, comments: results.postComments })
-  })
-}
+  }),
+  (req, res, next) => {
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) {
+      return res.status(400).send({ postWasFound: false, message: 'Validation failed'})
+    }
+    Post
+    .findOne({ '_id' : req.params.id })
+    .populate('author')
+    .exec((err, result) => {
+      if (err) return next(err)
+      return res.status(200).send({ postWasFound: true, message: 'Post was found', post: result })
+    })
+  }
+]
 
 module.exports.getArchive = (req, res, next) => {
   Post
@@ -57,12 +56,11 @@ module.exports.createPost = [
     jwt.verify(req.token, process.env.JWT_KEY, (err, result) => {
       if (err) return res.status(400).send({ postWasCreated: false, message: 'Could not verify credentials' })
       req.authData = result
-      console.log(result)
       next()
     })
   },
-  body('username').trim().notEmpty().escape(),
-  body('title').trim().notEmpty().escape(),
+  body('username').trim().notEmpty(),
+  body('title').trim().notEmpty(),
   (req, res, next) => {
     const errors = validationResult(req)
     if (!errors.isEmpty()) {
@@ -97,6 +95,13 @@ module.exports.updatePost = [
   },
   body('title').trim().notEmpty(),
   body('previewText').trim(),
+  param('id').custom((value) => {
+    if (!value.match(/^[0-9a-fA-F]{24}$/)) {
+      return Promise.reject('Value not a MongoDB objectid and will not be parsed')
+    } else {
+      return true
+    }
+  }),
 
   (req, res, next) => {
     const errors = validationResult(req)
@@ -129,6 +134,13 @@ module.exports.publishPost = [
     })
   },
   body('username').trim().notEmpty(),
+  param('id').custom((value) => {
+    if (!value.match(/^[0-9a-fA-F]{24}$/)) {
+      return Promise.reject('Value not a MongoDB objectid and will not be parsed')
+    } else {
+      return true
+    }
+  }),
   (req, res, next) => {
     const errors = validationResult(req)
     if (!errors.isEmpty()) {
@@ -157,6 +169,13 @@ module.exports.unpublishPost = [
     })
   },
   body('username').trim().notEmpty(),
+  param('id').custom((value) => {
+    if (!value.match(/^[0-9a-fA-F]{24}$/)) {
+      return Promise.reject('Value not a MongoDB objectid and will not be parsed')
+    } else {
+      return true
+    }
+  }),
   (req, res, next) => {
     const errors = validationResult(req)
     if (!errors.isEmpty()) {
@@ -185,6 +204,13 @@ module.exports.deletePost = (req, res, next) => {
     })
   },
   body('username').trim().notEmpty(),
+  param('id').custom((value) => {
+    if (!value.match(/^[0-9a-fA-F]{24}$/)) {
+      return Promise.reject('Value not a MongoDB objectid and will not be parsed')
+    } else {
+      return true
+    }
+  }),
   (req, res, next) => {
     const errors = validationResult(req)
     if (!errors.isEmpty()) {

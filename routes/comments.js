@@ -4,14 +4,16 @@ const commentsController = require('../controllers/commentsController')
 
 const router = express.Router()
 
+const verifyToken = require('../config/verifyToken')
+
 router.get('/:id', commentsController.getComment)
 
 router.get('/post/:id', commentsController.getPostComments)
 
-router.post('/', commentsController.createComment)
+router.post('/', verifyToken, commentsController.createComment)
 
-router.put('/:id', commentsController.updateComment)
+router.put('/:id', verifyToken, commentsController.updateComment)
 
-router.delete('/:id', commentsController.deleteComment)
+router.delete('/:id', verifyToken, commentsController.deleteComment)
 
 module.exports = router
