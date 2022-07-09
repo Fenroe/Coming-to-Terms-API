@@ -119,7 +119,6 @@ module.exports.updateComment = [
 
 module.exports.deleteComment = [
   (req, res, next) => {
-    console.log('verifying')
     jwt.verify(req.token, process.env.JWT_KEY, (err, result) => {
       if (err) return res.status(400).send({ commentWasDeleted: false, message: 'Could not verify credentials' })
       req.authData = result
@@ -135,7 +134,6 @@ module.exports.deleteComment = [
     }
   }),
   (req, res, next) => {
-    console.log('validation result')
     const errors = validationResult(req)
     if (!errors.isEmpty()) {
       return res.status(400).send({ commentWasDeleted: false, message: 'Validation failed' })
@@ -146,7 +144,6 @@ module.exports.deleteComment = [
     Comment
     .findOneAndDelete({'_id' : req.params.id })
     .exec((err, result) => {
-      console.log('finally')
       if (err) return next(err)
 
       return res.status(200).send({ commentWasDeleted: true, message: 'Comment successfully deleted' })
