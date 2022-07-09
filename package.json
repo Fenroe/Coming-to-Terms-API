@@ -7,8 +7,8 @@
   "description": "",
   "main": "app.js",
   "scripts": {
-    "start": "node ./bin/www",
-    "devstart": "nodemon ./bin/www",
+    "start": "node app.js",
+    "devstart": "nodemon app.js",
     "serverstart": "DEBUG=coming-to-terms-API:* npm run devstart"
   },
   "keywords": [],
