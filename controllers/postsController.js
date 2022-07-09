@@ -75,7 +75,6 @@ module.exports.createPost = [
       previewText: '',
       content: '',
       isPublished: false,
-      datePublished: new Date(),
       dateUpdated: new Date()
     })
     post.save((err, result) => {
@@ -115,6 +114,7 @@ module.exports.updatePost = [
     .findOneAndUpdate({'_id': req.body.postId}, {
       'title': req.body.title,
       'previewText': req.body.previewText,
+      'coverImage': req.body.coverImage,
       'content': sanitizeHtml(req.body.content, { allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img'])}),
       'dateUpdated': new Date()
     })
@@ -151,7 +151,8 @@ module.exports.publishPost = [
     }
     Post
     .findOneAndUpdate({ '_id':req.params.id }, {
-      'isPublished': true
+      'isPublished': true,
+      'datePublished': new Date()
     })
     .exec((err, result) => {
       if (err) return next(err)
@@ -195,7 +196,7 @@ module.exports.unpublishPost = [
   }
 ]
 
-module.exports.deletePost = (req, res, next) => {
+module.exports.deletePost = [
   (req, res, next) => {
     jwt.verify(req.token, process.env.JWT_KEY, (err, result) => {
       if (err) return res.status(400).send({ postWasDeleted: false, message: 'Could not verify credentials' })
@@ -226,4 +227,4 @@ module.exports.deletePost = (req, res, next) => {
       return res.status(200).send({ postWasDeleted: true, message: 'Post was deleted', post: result })
     })
   }
-}
+]

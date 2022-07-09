@@ -40,7 +40,7 @@ CommentSchema
 .virtual('dateEditedFromNow')
 .get(function () {
   if (this.dateUpdated) {
-    return `Edited ${day(this.dateUpdated).fromNow()}`
+    return `${day(this.dateUpdated).fromNow()}`
   }
 })
 

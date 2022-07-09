@@ -14,6 +14,8 @@ router.post('/login', usersController.login)
 
 router.put('/userinfo/:id', verifyToken, usersController.updateUser)
 
+router.put('/userinfo/sensitiveupdate/:id', verifyToken, usersController.updateUserSecurely)
+
 router.delete('/userinfo/:id', verifyToken, usersController.deleteUser)
 
 module.exports = router

@@ -6,7 +6,7 @@ const { body, param, validationResult } = require('express-validator')
 const async = require('async')
 
 module.exports.getUser = [
-  param('id').exists().trim().escape(),
+  param('id').exists().trim(),
   (req, res, next) => {
     const errors = validationResult(req)
     if (!errors.isEmpty()) {
@@ -22,6 +22,7 @@ module.exports.getUser = [
           Post
           .find({ 'author': req.params.id })
           .populate('author')
+          .sort({ 'dateUpdated': -1 })
           .exec(callback)
         }
       }, (err, results) => {
@@ -32,7 +33,8 @@ module.exports.getUser = [
           const userData = {
             username: results.userData.username,
             bio: results.userData.bio,
-            isContributor: results.userData.isContributor
+            isContributor: results.userData.isContributor,
+            email: results.userData.email
           }
           const drafts = []
           const published = []
@@ -60,9 +62,9 @@ module.exports.getUser = [
 ]
 
 module.exports.signup = [
-  body('username').trim().isLength({ min: 4, max: 20 }).escape(),
-  body('email').isEmail().escape(),
-  body('password').trim().isLength({ min: 6 }).escape(),
+  body('username').trim().isLength({ min: 4, max: 20 }),
+  body('email').isEmail(),
+  body('password').trim().isLength({ min: 6 }),
   (req, res, next) => {
     const errors = validationResult(req)
     if (!errors.isEmpty()) {
@@ -97,8 +99,8 @@ module.exports.signup = [
 ]
 
 module.exports.login = [
-  body('username').trim().isLength({ min: 4, max: 20 }).escape(),
-  body('password').trim().isLength({ min: 6 }).escape(),
+  body('username').trim().isLength({ min: 4, max: 20 }),
+  body('password').trim().isLength({ min: 6 }),
   (req, res, next) => {
     const errors = validationResult(req)
     if (!errors.isEmpty()) {
@@ -134,7 +136,7 @@ module.exports.updateUser = [
       next()
     })
   },
-  param('id').exists().trim().escape(),
+  param('id').exists().trim(),
   (req, res, next) => {
     const errors = validationResult(req)
     if (!errors.isEmpty()) {
@@ -144,10 +146,55 @@ module.exports.updateUser = [
       return res.status(403).send({ userWasUpdated: false, message: 'Action forbidden' })
     }
     User
-    .findOneAndUpdate({'_id': req.params.id}, { 'bio' : req.body.bio, 'isContributor' : req.body.isContributor })
+    .findOneAndUpdate({'_id': req.params.id}, {
+      'bio': req.body.bio
+    })
     .exec((err, result) => {
       if (err) return next(err)
       return res.status(200).send({ userWasUpdated: true, message: 'User was updated' })
+    })
+  }
+]
+
+module.exports.updateUserSecurely = [
+  (req, res, next) => {
+    jwt.verify(req.token, process.env.JWT_KEY, (err, result) => {
+      if (err) return res.status(400).send({ userWasUpdated: false, message: 'Request was unsuccessful' })
+      req.authData = result
+      next()
+    })
+  },
+  param('id').exists().trim(),
+  body('password').exists().trim(),
+  body('newPassword').exists().trim(),
+  (req, res, next) => {
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) {
+      return res.status(400).send({ userWasUpdated: false, message: 'Validation failed' })
+    }
+    if (req.authData.userId !== req.params.id) {
+      return res.status(403).send({ userWasUpdated: false, message: 'Action forbidden' })
+    }
+    User
+    .findOne({'_id': req.params.id})
+    .exec((err, result) => {
+      if (err) return next(err)
+      bcrypt.compare(req.body.password, result.password, (err, success) => {
+        if (err) return next(err)
+        if (!success) return res.status(403).send({ userWasUpdated: false, message: 'Invalid password' })
+        bcrypt.hash(req.body.newPassword, 10, (err, hashedPassword) => {
+          if (err) return next(err)
+          User
+          .findOneAndUpdate({'_id': req.params.id}, {
+            'email': req.body.email,
+            'password': hashedPassword
+          })
+          .exec((err, previousResult) => {
+            if (err) return next(err)
+            return res.status(200).send({ userWasUpdated: true, message: 'User was updated' })
+          })  
+        })
+      })
     })
   }
 ]
@@ -160,8 +207,8 @@ module.exports.deleteUser = [
       next()
     })
   },
-  param('id').exists().trim().escape(),
-  body('password').trim().isLength({ min: 6 }).escape(),
+  param('id').exists().trim(),
+  body('password').trim().isLength({ min: 6 }),
   (req, res, next) => {
     const errors = validationResult(req)
     if (!errors.isEmpty()) {

@@ -58,7 +58,7 @@ module.exports.createComment = [
     })
   },
   body('username').trim().notEmpty(),
-  body('content').trim().notEmpty().escape(),
+  body('content').trim().notEmpty(),
   (req, res, next) => {
     const errors = validationResult(req)
     if (!errors.isEmpty()) {
@@ -89,7 +89,7 @@ module.exports.updateComment = [
     })
   },
   body('username').trim().notEmpty(),
-  body('content').trim().notEmpty().escape(),
+  body('content').trim().notEmpty(),
   param('id').custom((value) => {
     if (!value.match(/^[0-9a-fA-F]{24}$/)) {
       return Promise.reject('Value not a MongoDB objectid and will not be parsed')
@@ -106,7 +106,7 @@ module.exports.updateComment = [
       return res.status(403).send({ commentWasUpdated: false, message: 'Forbidden action'})
     }
     Comment
-    .findOneAndUpdate({'_id' : req.params.commentId }, {
+    .findOneAndUpdate({'_id' : req.params.id }, {
       'content' : req.body.content,
       'dateUpdated': new Date()
     })
@@ -119,6 +119,7 @@ module.exports.updateComment = [
 
 module.exports.deleteComment = [
   (req, res, next) => {
+    console.log('verifying')
     jwt.verify(req.token, process.env.JWT_KEY, (err, result) => {
       if (err) return res.status(400).send({ commentWasDeleted: false, message: 'Could not verify credentials' })
       req.authData = result
@@ -134,6 +135,7 @@ module.exports.deleteComment = [
     }
   }),
   (req, res, next) => {
+    console.log('validation result')
     const errors = validationResult(req)
     if (!errors.isEmpty()) {
       return res.status(400).send({ commentWasDeleted: false, message: 'Validation failed' })
@@ -142,9 +144,11 @@ module.exports.deleteComment = [
       return res.status(403).send({ commentWasDeleted: false, message: 'Forbidden action'})
     }
     Comment
-    .findOneAndDelete({'_id' : req.params.commentId })
+    .findOneAndDelete({'_id' : req.params.id })
     .exec((err, result) => {
+      console.log('finally')
       if (err) return next(err)
+
       return res.status(200).send({ commentWasDeleted: true, message: 'Comment successfully deleted' })
     })
   }

@@ -9,10 +9,11 @@ const PostSchema = new Schema({
   title: { type: String },
   author: { type: String, ref: 'User', required: true},
   previewText: { type: String },
+  coverImage: { type: String },
   content: { type: String },
   isPublished: { type: Boolean, required: true },
-  datePublished: { type: Date, required: true },
-  dateUpdated: { type: Date, required: true }
+  datePublished: { type: Date },
+  dateUpdated: { type: Date }
 }, {
   toObject: { virtuals: true },
   toJSON: { virtuals: true }
