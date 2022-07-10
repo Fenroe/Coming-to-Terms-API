@@ -20,7 +20,7 @@ db.on('error', console.error.bind(console, 'MongoDB connection error.'))
 
 app.use(helmet())
 app.use(cors({
-  origin: 'https://fenroe.github.io/coming-to-terms'
+  origin: 'https://comingtoterms.netlify.app'
 }))
 app.use(express.json())
 app.use(express.urlencoded({ extended: false }))
