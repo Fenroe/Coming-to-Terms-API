@@ -1,10 +1,9 @@
-const express = require('express')
+const Router = require('express-promise-router')
+const router = new Router()
 
 const verifyToken = require('../config/verifyToken')
 
 const usersController = require('../controllers/usersController')
-
-const router = express.Router()
 
 router.get('/userinfo/:id', usersController.getUser)
 

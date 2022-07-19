@@ -3,7 +3,6 @@ require('dotenv').config()
 const express = require('express')
 
 const app = express()
-const path = require('path')
 const cors = require('cors')
 const compression = require('compression')
 const helmet = require('helmet')
@@ -20,7 +19,7 @@ db.on('error', console.error.bind(console, 'MongoDB connection error.'))
 
 app.use(helmet())
 app.use(cors({
-  origin: 'https://comingtoterms.netlify.app'
+  origin: process.env.CORS_ORIGIN
 }))
 app.use(express.json())
 app.use(express.urlencoded({ extended: false }))

@@ -1,10 +1,9 @@
-const express = require('express')
+const Router = require('express-promise-router')
+const router = new Router()
 
 const verifyToken = require('../config/verifyToken')
 
 const postsController = require('../controllers/postsController')
-
-const router = express.Router()
 
 router.get('/archive', postsController.getArchive)
 

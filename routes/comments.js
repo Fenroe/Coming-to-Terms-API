@@ -1,8 +1,7 @@
-const express = require('express')
+const Router = require('express-promise-router')
+const router = new Router()
 
 const commentsController = require('../controllers/commentsController')
-
-const router = express.Router()
 
 const verifyToken = require('../config/verifyToken')
 
