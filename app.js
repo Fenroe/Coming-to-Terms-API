@@ -6,6 +6,7 @@ const app = express()
 const cors = require('cors')
 const compression = require('compression')
 const helmet = require('helmet')
+const passport = require('./config/passport')
 
 const commentsRouter = require('./routes/comments')
 const postsRouter = require('./routes/posts')
@@ -21,6 +22,7 @@ app.use(helmet())
 app.use(cors({
   origin: process.env.CORS_ORIGIN
 }))
+app.use(passport.initialize())
 app.use(express.json())
 app.use(express.urlencoded({ extended: false }))
 app.use(compression())

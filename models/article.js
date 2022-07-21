@@ -5,54 +5,51 @@ day.extend(relativeTime)
 
 const Schema = mongoose.Schema
 
-const PostSchema = new Schema({
-  title: { type: String },
+const ArticleSchema = new Schema({
+  _id: { type: String },
+  title: { type: String, unique: true, required: true },
   author: { type: String, ref: 'User', required: true},
-  previewText: { type: String },
+  subtitle: { type: String },
   coverImage: { type: String },
   content: { type: String },
+  topic: { type: String, ref: 'Topic' },
+  tags: { type: Array },
   isPublished: { type: Boolean, required: true },
-  datePublished: { type: Date },
-  dateUpdated: { type: Date }
+  datePublished: { type: Date }
 }, {
+  timestamps: { createdAt: 'dateCreated', updatedAt: 'dateUpdated' },
   toObject: { virtuals: true },
   toJSON: { virtuals: true }
 })
 
-PostSchema
-.virtual('url')
-.get(function() {
-  return `/posts/${this._id}`
-})
-
-PostSchema
+ArticleSchema
 .virtual('authorName')
 .get(function () {
   return this.author.username
 })
 
-PostSchema
+ArticleSchema
 .virtual('datePublishedFormatted')
 .get(function () {
   return `${day(this.datePublished).format('MMMM D YYYY')}`
 })
 
-PostSchema
+ArticleSchema
 .virtual('datePublishedFromNow')
 .get(function () {
   return `Published ${day(this.datePublished).fromNow()}`
 })
 
-PostSchema
+ArticleSchema
 .virtual('dateUpdatedFormatted')
 .get(function () {
   return 'A formatted update date (not implemented yet)'
 })
 
-PostSchema
+ArticleSchema
 .virtual('yearAndMonthPublished')
 .get(function () {
   return day(this.datePublished).format('MMMM YYYY')
 })
 
-module.exports = mongoose.model('Post', PostSchema)
+module.exports = mongoose.model('Article', ArticleSchema)

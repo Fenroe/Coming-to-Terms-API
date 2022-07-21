@@ -1,0 +1,1 @@
+module.exports.getQueryValues = require('./getQueryValues')
