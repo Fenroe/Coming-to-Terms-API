@@ -1,21 +1,24 @@
 const Router = require('express-promise-router')
 const router = new Router()
 
-const passport = require('../config/passport')
+const { authenticateJwt } = require('../auth')
+const { articlesController } = require('../controllers')
 
-router.get('/info/:articleId', postsController.getPost)
-router.get('/all')
+router.get('/info/:articleId', articlesController.getArticle)
+router.get('/all', articlesController.getAllArticles)
+router.get('/user-article/:articleId', authenticateJwt(), articlesController.getUserArticle)
+router.get('/all-user', authenticateJwt(), articlesController.getAllUserArticles)
 
-router.post('/new', passport.authenticate('jwt', { session: false }), postsController.createPost)
+router.post('/new', authenticateJwt(), articlesController.createArticle)
 
-router.put('/update-title/:articleId', passport.authenticate('jwt', { session: false }), postsController.updatePost)
-router.put('/update-subtitle/:articleId', passport.authenticate('jwt', { session: false }))
-router.put('/update-content/:articleId', passport.authenticate('jwt', {session: false }))
-router.put('/update-cover-image/:articleId', passport.authenticate('jwt', {session: false }))
-router.put('/update-tags/:articleId', passport.authenticate('jwt', {session: false }))
-router.put('/publish/:articleId', passport.authenticate('jwt', { session: false }), postsController.publishPost)
-router.put('/unpublish/:articleId', passport.authenticate('jwt', { session: false }), postsController.unpublishPost)
+router.put('/update-title/:articleId', authenticateJwt(), articlesController.updateTitle)
+router.put('/update-subtitle/:articleId', authenticateJwt(), articlesController.updateSubtitle)
+router.put('/update-content/:articleId', authenticateJwt(), articlesController.updateContent)
+router.put('/update-cover-image/:articleId', authenticateJwt(), articlesController.updateCoverImage)
+router.put('/update-tags/:articleId', authenticateJwt(), articlesController.updateTags)
+router.put('/publish/:articleId', authenticateJwt(), articlesController.publishArticle)
+router.put('/unpublish/:articleId', authenticateJwt(), articlesController.unpublishArticle)
 
-router.delete('/delete/:articleId', passport.authenticate('jwt', { session: false }), postsController.deletePost)
+router.delete('/delete/:articleId', authenticateJwt(), articlesController.deleteArticle)
 
 module.exports = router

@@ -1,13 +1,13 @@
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcryptjs')
-const Profile = require('../models/profile')
-const Credentials = require('../models/credentials')
+const { Profile, Credentials } = require('../models')
 const { body, validationResult } = require('express-validator')
+const { getQueryValues, getUrlString } = require('../utils')
 
 module.exports.getProfile = async (req, res, next) => {
   try {
     const username = req.params.username
-    const profile = await Profile.findOne({ '_id': username }).exec()
+    const profile = await Profile.findOne({ 'url': username }).exec()
     return res.status(200).send({ profile })
   } catch (err) {
     return next(err)
@@ -16,7 +16,8 @@ module.exports.getProfile = async (req, res, next) => {
 
 module.exports.getAllProfiles = async (req, res, next) => {
   try {
-    const profiles = await Profile.find().exec()
+    const { query, limit, offset } = getQueryValues(req)
+    const profiles = await Profile.find(query).limit(limit).skip(offset).exec()
     return res.status(200).send({ profiles })
   } catch (err) {
     return next(err)
@@ -30,13 +31,12 @@ module.exports.signup = [
   async (req, res, next) => {
     try {
       const { username, email, password } = req.body
-      const usernameUnavailable = await Profile.findOne({ '_id': username }).exec()
+      const usernameUnavailable = await Profile.findOne({ 'username': username }).exec()
       if (usernameUnavailable) {
         throw new Error('Username unavailable')
       }
       const hashedPassword = await bcrypt.hash(password, 10)
       const profile = new Profile({
-        _id: username,
         username
       })
       const savedProfile = await profile.save()
@@ -46,7 +46,7 @@ module.exports.signup = [
         profile: savedProfile._id
       })
       await credentials.save()
-      return res.status(201).send({ newProfileId: savedProfile.id })
+      return res.status(201).send({ newProfileId: savedProfile._id })
     } catch (err) {
       return next(err)
     }
@@ -110,11 +110,11 @@ module.exports.updateUsername = [
       if (username === req.user.profile._id) {
         throw new Error('Unnecessary update')
       }
-      const usernameInUse = await Profile.findOne({ '_id': username }).exec()
+      const usernameInUse = await Profile.findOne({ 'username': username }).exec()
       if (usernameInUse) {
         throw new Error('Username is already in use')
       }
-      await Profile.findOneAndUpdate({ '_id': req.user.profile._id}, { '_id': username }).exec()
+      await Profile.findOneAndUpdate({ '_id': req.user.profile._id}, { 'username': username, 'url': getUrlString(username) }).exec()
       return res.status(200).send({ message: 'Username was updated' })
     } catch (err) {
       return next(err)

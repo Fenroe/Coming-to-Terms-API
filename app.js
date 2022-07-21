@@ -8,9 +8,7 @@ const compression = require('compression')
 const helmet = require('helmet')
 const passport = require('./config/passport')
 
-const commentsRouter = require('./routes/comments')
-const postsRouter = require('./routes/posts')
-const usersRouter = require('./routes/users')
+const apiRouter = require('./routes')
 
 const mongoose = require('mongoose')
 const mongoDB = process.env.MONGO_URI
@@ -26,9 +24,7 @@ app.use(passport.initialize())
 app.use(express.json())
 app.use(express.urlencoded({ extended: false }))
 app.use(compression())
-app.use('/comments', commentsRouter)
-app.use('/posts', postsRouter)
-app.use('/users', usersRouter)
+app.use('/api', apiRouter)
 
 app.listen(process.env.PORT, () => { 
   console.log('Listening on port ' + process.env.PORT)

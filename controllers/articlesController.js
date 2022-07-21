@@ -1,14 +1,12 @@
-const Article = require('../models/article')
-const sanitizeHtml = require('sanitize-html')
-const slugify = require('slugify')
-const { getQueryValues } = require('../utils')
+const { Article, Topic } = require('../models')
+const { getQueryValues, getUrlString } = require('../utils')
 
 const { body, validationResult } = require('express-validator')
 
 module.exports.getArticle = async (req, res, next) => {
   try {
     const { articleId } = req.params
-    const article = await Article.findOne({ '_id': articleId, 'isPublished': true }).exec()
+    const article = await Article.findOne({ 'url': articleId, 'isPublished': true }).exec()
     return res.status(200).send({ article })
   } catch (err) {
     return next(err)
@@ -29,7 +27,7 @@ module.exports.getUserArticle = async (req, res, next) => {
   try {
     const profile = req.user.profile._id
     const { articleId } = req.params
-    const article = await Article.findOne({ '_id': articleId, 'profile': profile }).exec()
+    const article = await Article.findOne({ 'url': articleId, 'profile': profile }).exec()
     return res.status(200).send({ article })
   } catch (err) {
     return next(err)
@@ -38,6 +36,7 @@ module.exports.getUserArticle = async (req, res, next) => {
 
 module.exports.getAllUserArticles = async (req, res, next) => {
   try {
+    console.log(req.user)
     const profile = req.user.profile._id
     const { query, limit, offset } = getQueryValues(req, { profile })
     const articles = await Article.find(query).limit(limit).skip(offset).exec()
@@ -64,7 +63,6 @@ module.exports.createArticle = [
       }
       const profile = req.user.profile._id
       const article = new Article({
-        _id: slugify(title),
         title,
         subtitle,
         profile,
@@ -94,7 +92,7 @@ module.exports.updateTitle = [
       }
       const { articleId } = req.params
       const profile = req.user.profile._id
-      await Article.findOneAndUpdate({ '_id': articleId, 'profile': profile }, { '_id': slugify(title), 'title': title }).exec()
+      await Article.findOneAndUpdate({ 'url': articleId, 'profile': profile }, { 'title': title, 'url': getUrlString(title) }).exec()
       return res.status(200).send({ message: 'Article title updated' })
     } catch (err) {
       return next(err)
@@ -113,7 +111,7 @@ module.exports.updateSubtitle = [
       const { subtitle } = req.body
       const { articleId } = req.params
       const profile = req.user.profile._id
-      await Article.findOneAndUpdate({ '_id': articleId, 'profile': profile }, { 'subtitle': subtitle }).exec()
+      await Article.findOneAndUpdate({ 'url': articleId, 'profile': profile }, { 'subtitle': subtitle }).exec()
       return res.status(200).send({ message: 'Article subtitle updated' })
     } catch (err) {
       return next(err)
@@ -132,7 +130,7 @@ module.exports.updateContent = [
       const { content } = req.body
       const { articleId } = req.params
       const profile = req.user.profile._id
-      await Article.findOneAndUpdate({ '_id': articleId, 'profile': profile }, { 'content': content }).exec()
+      await Article.findOneAndUpdate({ 'url': articleId, 'profile': profile }, { 'content': content }).exec()
       return res.status(200).send({ message: 'Article content updated' })
     } catch (err) {
       return next(err)
@@ -151,7 +149,7 @@ module.exports.updateCoverImage = [
       const { coverImage } = req.body
       const { articleId } = req.params
       const profile = req.user.profile._id
-      await Article.findOneAndUpdate({ '_id': articleId, 'profile': profile }, { 'coverImage': coverImage }).exec()
+      await Article.findOneAndUpdate({ 'url': articleId, 'profile': profile }, { 'coverImage': coverImage }).exec()
       return res.status(200).send({ message: 'Article cover image updated' })
     } catch (err) {
       return next(err)
@@ -168,13 +166,13 @@ module.exports.updateTopic = [
         throw new Error('Validation failed')
       }
       const { topic } = req.body
-      const topicQuery = await topic.findOne({ '_id': topic })
+      const topicQuery = await Topic.findOne({ '_id': topic }).exec()
       if (!topicQuery) {
         throw new Error('Topic does not exist')
       }
       const { articleId } = req.params
       const profile = req.user.profile._id
-      await Article.findOneAndUpdate({ '_id': articleId, 'profile': profile }, { 'topic': topic }).exec()
+      await Article.findOneAndUpdate({ 'url': articleId, 'profile': profile }, { 'topic': topic }).exec()
       return res.status(200).send({ message: 'Article topic updated' })
     } catch (err) {
       return next(err)
@@ -193,7 +191,7 @@ module.exports.updateTags = [
       const { tags } = req.body
       const { articleId } = req.params
       const profile = req.user.profile._id
-      await Article.findOneAndUpdate({ '_id': articleId, 'profile': profile }, { 'tags': tags }).exec()
+      await Article.findOneAndUpdate({ 'url': articleId, 'profile': profile }, { 'tags': tags }).exec()
       return res.status(200).send({ message: 'Article tags updated' })
     } catch (err) {
       return next(err)
@@ -205,7 +203,7 @@ module.exports.publishArticle = async (req, res, next) => {
   try {
     const { articleId } = req.params
     const profile = req.user.profile._id
-    await Article.findOneAndUpdate({ '_id': articleId, 'profile': profile }, { 'isPublished': true }).exec()
+    await Article.findOneAndUpdate({ 'url': articleId, 'profile': profile }, { 'isPublished': true }).exec()
     return res.status(200).send({ message: 'Article was published' })
   } catch (err) {
     return next(err)
@@ -216,7 +214,7 @@ module.exports.unpublishArticle = async (req, res, next) => {
   try {
     const { articleId } = req.params
     const profile = req.user.profile._id
-    await Article.findOneAndUpdate({ '_id': articleId, 'profile': profile }, { 'isPublished': false }).exec()
+    await Article.findOneAndUpdate({ 'url': articleId, 'profile': profile }, { 'isPublished': false }).exec()
     return res.status(200).send({ message: 'Article was published' })
   } catch (err) {
     return next(err)
@@ -227,7 +225,7 @@ module.exports.deleteArticle = async (req, res, next) => {
   try {
     const { articleId } = req.params
     const profile = req.user.profile._id
-    await Article.findOneAndDelete({ '_id': articleId, 'profile': profile })
+    await Article.findOneAndDelete({ 'url': articleId, 'profile': profile })
     return res.status(200).send({ message: 'Article was deleted' })
   } catch (err) {
     return next(err)

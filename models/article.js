@@ -2,17 +2,18 @@ const mongoose = require('mongoose')
 const day = require('dayjs')
 const relativeTime = require('dayjs/plugin/relativeTime')
 day.extend(relativeTime)
+const { getUrlString } = require('../utils')
 
 const Schema = mongoose.Schema
 
 const ArticleSchema = new Schema({
-  _id: { type: String },
   title: { type: String, unique: true, required: true },
-  author: { type: String, ref: 'User', required: true},
+  url: { type: String, required: true, unique: true },
+  profile: { type: Schema.Types.ObjectId, ref: 'Profile', required: true},
   subtitle: { type: String },
   coverImage: { type: String },
   content: { type: String },
-  topic: { type: String, ref: 'Topic' },
+  topic: { type: Schema.Types.ObjectId, ref: 'Topic' },
   tags: { type: Array },
   isPublished: { type: Boolean, required: true },
   datePublished: { type: Date }
@@ -23,9 +24,17 @@ const ArticleSchema = new Schema({
 })
 
 ArticleSchema
+.pre('validate', function(next) {
+  if (this.title) {
+    this.url = getUrlString(this.title)
+  }
+  next()
+})
+
+ArticleSchema
 .virtual('authorName')
 .get(function () {
-  return this.author.username
+  return this.profile.username
 })
 
 ArticleSchema
@@ -43,7 +52,7 @@ ArticleSchema
 ArticleSchema
 .virtual('dateUpdatedFormatted')
 .get(function () {
-  return 'A formatted update date (not implemented yet)'
+  return `${day(this.dateUpdated).format('MMMM D YYYY')}`
 })
 
 ArticleSchema

@@ -1,13 +1,22 @@
+const { nextTick } = require('async')
 const mongoose = require('mongoose')
+const { getUrlString } = require('../utils')
 
 const Schema = mongoose.Schema
 
-const UserSchema = new Schema(
+const ProfileSchema = new Schema(
   {
-    _id: { type: String, required: true, minLength: 4, maxLength: 20 },
-    username: { type: String, required: true, unique: true, minLength: 4, maxLength: 20 },
+    username: { type: String, required: true, unique: true },
+    url: { type: String, required: true, unique: true },
     bio: { type: String }
   }
 )
 
-module.exports = mongoose.model('User', UserSchema)
+ProfileSchema.pre('validate', function(next) {
+  if (this.username) {
+    this.url = getUrlString(this.username)
+  }
+  next()
+})
+
+module.exports = mongoose.model('Profile', ProfileSchema)

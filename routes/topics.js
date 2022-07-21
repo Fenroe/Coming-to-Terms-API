@@ -1,16 +1,18 @@
 const Router = require('express-promise-router')
 const router = new Router()
 
-const passport = require('../config/passport')
+const { authenticateJwt } = require('../auth')
 
-router.get('/info/:topicId')
-router.get('/all')
+const { topicsController } = require('../controllers')
 
-router.post('/new', passport.authenticate('jwt', { session: false }))
+router.get('/info/:topicId', topicsController.getTopic)
+router.get('/all', topicsController.getAllTopics)
 
-router.put('/update-name/:topicId', passport.authenticate('jwt', { session: false }))
-router.put('/update-description/:topicId', passport.authenticate('jwt', { session: false }))
+router.post('/new', authenticateJwt(), topicsController.createTopic)
 
-router.delete('/delete/:topicId', passport.authenticate('jwt', { session: false }))
+router.put('/update-name/:topicId', authenticateJwt(), topicsController.updateName)
+router.put('/update-description/:topicId', authenticateJwt(), topicsController.updateDescription)
+
+router.delete('/delete/:topicId', authenticateJwt(), topicsController.deleteTopic)
 
 module.exports = router

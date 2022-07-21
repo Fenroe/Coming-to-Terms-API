@@ -1,5 +1,3 @@
 module.exports.profilesController = require('./profilesController')
-module.exports.articlesController = require('./postsController')
-module.exports.commentsController = require('./commentsController')
-module.exports.categoriesController = require()
-module.exports.keywordsController = require()
+module.exports.articlesController = require('./articlesController')
+module.exports.topicsController = require('./topicsController')
