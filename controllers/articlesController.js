@@ -16,7 +16,7 @@ module.exports.getArticle = async (req, res, next) => {
 module.exports.getAllArticles = async (req, res, next) => {
   try {
     const { query, limit, offset } = getQueryValues(req, { isPublished: true })
-    const articles = await Article.find(query).limit(limit).skip(offset).exec()
+    const articles = await Article.find(query).limit(limit).skip(offset).populate('profile').exec()
     return res.status(200).send({ articles })
   } catch (err) {
     return next(err)
@@ -27,7 +27,7 @@ module.exports.getUserArticle = async (req, res, next) => {
   try {
     const profile = req.user.profile._id
     const { articleId } = req.params
-    const article = await Article.findOne({ 'url': articleId, 'profile': profile }).exec()
+    const article = await Article.findOne({ 'url': articleId, 'profile': profile }).populate('profile').exec()
     return res.status(200).send({ article })
   } catch (err) {
     return next(err)
@@ -38,7 +38,7 @@ module.exports.getAllUserArticles = async (req, res, next) => {
   try {
     const profile = req.user.profile._id
     const { query, limit, offset } = getQueryValues(req, { profile })
-    const articles = await Article.find(query).limit(limit).skip(offset).exec()
+    const articles = await Article.find(query).limit(limit).skip(offset).populate('profile').exec()
     return res.status(200).send({ articles })
   } catch (err) {
     return next(err)
@@ -53,7 +53,7 @@ module.exports.createArticle = [
       if (!errors.isEmpty()) {
         throw new Error('Validation failed')
       }
-      const { title, subtitle, coverImage } = req.body
+      const { title } = req.body
       const titleInUse = await Article.findOne({ 'title': title }).exec()
       if (titleInUse) {
         throw new Error('There is another article with this title.')
