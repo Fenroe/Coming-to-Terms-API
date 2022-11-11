@@ -15,6 +15,8 @@ router.put('/update-bio', authenticateJwt(), profilesController.updateBio)
 router.put('/update-username', authenticateJwt(), profilesController.updateUsername)
 router.put('/update-email', authenticateJwt(), profilesController.updateEmail)
 router.put('/update-password', authenticateJwt(), profilesController.updatePassword)
+router.put('/update-profile', authenticateJwt(), profilesController.updateProfile)
+router.put('/update-credentials', authenticateJwt(), profilesController.updateCredentials)
 
 router.delete('/close-account', authenticateJwt(), profilesController.closeAccount)
 

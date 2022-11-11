@@ -18,6 +18,7 @@ router.put('/update-cover-image/:articleId', authenticateJwt(), articlesControll
 router.put('/update-tags/:articleId', authenticateJwt(), articlesController.updateTags)
 router.put('/publish/:articleId', authenticateJwt(), articlesController.publishArticle)
 router.put('/unpublish/:articleId', authenticateJwt(), articlesController.unpublishArticle)
+router.put('/update/:articleId', authenticateJwt(), articlesController.updateArticle)
 
 router.delete('/delete/:articleId', authenticateJwt(), articlesController.deleteArticle)
 

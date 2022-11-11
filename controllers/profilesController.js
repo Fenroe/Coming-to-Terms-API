@@ -35,6 +35,10 @@ module.exports.signup = [
       if (usernameUnavailable) {
         throw new Error('Username unavailable')
       }
+      const emailUnavailable = await Credentials.findOne({ 'email': email }).exec()
+      if (emailUnavailable) {
+        throw new Error('Email unavailable')
+      }
       const hashedPassword = await bcrypt.hash(password, 10)
       const profile = new Profile({
         username
@@ -43,10 +47,11 @@ module.exports.signup = [
       const credentials = new Credentials({
         email,
         password: hashedPassword,
-        profile: savedProfile._id
+        profile: savedProfile._id,
+        isContributor: false
       })
       await credentials.save()
-      return res.status(201).send({ newProfileId: savedProfile._id })
+      return res.status(201).send({ userWasCreated: true, newProfileId: savedProfile._id })
     } catch (err) {
       return next(err)
     }
@@ -77,7 +82,8 @@ module.exports.login = [
         iat: Date.now()
       }
       const token = jwt.sign(payload, process.env.JWT_KEY)
-      return res.status(200).send({ token, profile })
+      const isContributor = credentials.isContributor
+      return res.status(200).send({ token, profile, isContributor })
     } catch (err) {
       return next(err)
     }
@@ -162,6 +168,61 @@ module.exports.updatePassword = [
       const newHashedPassword = await bcrypt.hash(newPassword, 10)
       await Credentials.findOneAndUpdate({ '_id': credentialsId }, { 'password': newHashedPassword }).exec()
       return res.status(200).send({ message: 'Password updated' })
+    } catch (err) {
+      return next(err)
+    }
+  }
+]
+
+module.exports.updateProfile = [
+  body('bio').exists({ checkFalsy: false, checkNull: true }),
+  body('username').trim().notEmpty(),
+  async (req, res, next) => {
+    try {
+      const errors = validationResult(req)
+      if (!errors.isEmpty()) {
+        throw new Error('Validation failed')
+      }
+      const { username, bio } = req.body
+      if (username === req.user.profile._id) {
+        throw new Error('Unnecessary update')
+      }
+      const usernameInUse = await Profile.findOne({ 'username': username }).exec()
+      if (usernameInUse && usernameInUse !== req.user.profile) {
+        throw new Error('Username is already in use')
+      }
+      await Profile.findOneAndUpdate({ '_id': req.user.profile._id}, { 'username': username, 'url': getUrlString(username), 'bio': bio }).exec()
+      return res.status(200).send({ message: 'Profile was updated' })
+    } catch (err) {
+      return next(err)
+    }
+  }
+]
+
+module.exports.updateCredentials = [
+  body('email').isEmail(),
+  body('currentPassword').trim().notEmpty(),
+  body('newPassword').trim().notEmpty(),
+  async (req, res, next) => {
+    try {
+      const errors = validationResult(req)
+      if (!errors.isEmpty()) {
+        throw new Error('Validation failed')
+      }
+      const { email, currentPassword, newPassword } = req.body
+      const credentialsId = req.user._id
+      const emailInUse = await Credentials.findOne({ 'email': email }).exec()
+      if (emailInUse && emailInUse !== req.user) {
+        throw new Error('Email is already in use')
+      }
+      const hashedPassword = req.user.password
+      const passwordsMatch = await bcrypt.compare(currentPassword, hashedPassword)
+      if (!passwordsMatch) {
+        throw new Error('Incorrect password')
+      }
+      const newHashedPassword = await bcrypt.hash(newPassword, 10)
+      await Credentials.findOneAndUpdate({ '_id': credentialsId }, { 'email': email, 'password': newHashedPassword }).exec()
+      return res.status(200).send({ message: 'Email was updated' })
     } catch (err) {
       return next(err)
     }

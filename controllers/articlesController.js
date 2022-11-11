@@ -15,10 +15,14 @@ module.exports.getArticle = async (req, res, next) => {
 
 module.exports.getAllArticles = async (req, res, next) => {
   try {
+    console.log('boop')
     const { query, limit, offset } = getQueryValues(req, { isPublished: true })
+    console.log({ query, limit, offset })
     const articles = await Article.find(query).limit(limit).skip(offset).exec()
+    console.log(articles)
     return res.status(200).send({ articles })
   } catch (err) {
+    console.log(err)
     return next(err)
   }
 }
@@ -220,6 +224,32 @@ module.exports.unpublishArticle = async (req, res, next) => {
     return next(err)
   }
 }
+
+module.exports.updateArticle = [
+  body('title').isString(),
+  body('subtitle').isString(),
+  body('content').isString(),
+  body('coverImage').isString(),
+  async (req, res, next) => {
+    try {
+      const errors = validationResult(req)
+      if (!errors.isEmpty()) {
+        throw new Error('Validation failed')
+      }
+      const { title, subtitle, content, coverImage } = req.body
+      const { articleId } = req.params
+      const profile = req.user.profile._id
+      await Article.findOneAndUpdate(
+        { 'url': articleId, 'profile': profile },
+        { 'title': title, 'subtitle': subtitle, 'content': content, 'coverImage': coverImage }
+      )
+      .exec()
+      return res.status(200).send({ message: 'Article was updated' })
+    } catch (err) {
+      return next(err)
+    }
+  }
+]
 
 module.exports.deleteArticle = async (req, res, next) => {
   try {

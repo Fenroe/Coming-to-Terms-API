@@ -2,7 +2,7 @@
   "name": "coming-to-terms",
   "version": "1.0.0",
   "engines": {
-    "node": "16.15.1"
+    "node": "16.18.0"
   },
   "description": "",
   "main": "app.js",
