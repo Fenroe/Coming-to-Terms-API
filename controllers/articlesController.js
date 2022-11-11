@@ -6,7 +6,7 @@ const { body, validationResult } = require('express-validator')
 module.exports.getArticle = async (req, res, next) => {
   try {
     const { articleId } = req.params
-    const article = await Article.findOne({ 'url': articleId, 'isPublished': true }).exec()
+    const article = await Article.findOne({ 'url': articleId, 'isPublished': true }).populate('profile').exec()
     return res.status(200).send({ article })
   } catch (err) {
     return next(err)
@@ -15,14 +15,10 @@ module.exports.getArticle = async (req, res, next) => {
 
 module.exports.getAllArticles = async (req, res, next) => {
   try {
-    console.log('boop')
     const { query, limit, offset } = getQueryValues(req, { isPublished: true })
-    console.log({ query, limit, offset })
     const articles = await Article.find(query).limit(limit).skip(offset).exec()
-    console.log(articles)
     return res.status(200).send({ articles })
   } catch (err) {
-    console.log(err)
     return next(err)
   }
 }
@@ -40,7 +36,6 @@ module.exports.getUserArticle = async (req, res, next) => {
 
 module.exports.getAllUserArticles = async (req, res, next) => {
   try {
-    console.log(req.user)
     const profile = req.user.profile._id
     const { query, limit, offset } = getQueryValues(req, { profile })
     const articles = await Article.find(query).limit(limit).skip(offset).exec()
@@ -52,8 +47,6 @@ module.exports.getAllUserArticles = async (req, res, next) => {
 
 module.exports.createArticle = [
   body('title').isString().notEmpty().trim(),
-  body('subtitle').isString().trim(),
-  body('coverImage').isString(),
   async (req, res, next) => {
     try {
       const errors = validationResult(req)
@@ -68,9 +61,9 @@ module.exports.createArticle = [
       const profile = req.user.profile._id
       const article = new Article({
         title,
-        subtitle,
+        subtitle: '',
         profile,
-        coverImage,
+        coverImage: '',
         isPublished: false
       })
       const savedArticle = await article.save()

@@ -33,11 +33,11 @@ module.exports.signup = [
       const { username, email, password } = req.body
       const usernameUnavailable = await Profile.findOne({ 'username': username }).exec()
       if (usernameUnavailable) {
-        throw new Error('Username unavailable')
+        return res.status(409).send('Username unavailable')
       }
       const emailUnavailable = await Credentials.findOne({ 'email': email }).exec()
       if (emailUnavailable) {
-        throw new Error('Email unavailable')
+        return res.status(409).send('Email unavailable')
       }
       const hashedPassword = await bcrypt.hash(password, 10)
       const profile = new Profile({
@@ -70,11 +70,11 @@ module.exports.login = [
       const { email, password } = req.body
       const credentials = await Credentials.findOne({ 'email': email }).exec()
       if (!credentials) {
-        throw new Error('Invalid username/password')
+        return res.status(409).send('Invalid username/password')
       }
       const passwordsMatch = await bcrypt.compare(password, credentials.password)
       if (!passwordsMatch) {
-        throw new Error('Invalid username/password')
+        return res.status(409).send('Invalid username/password')
       }
       const profile = await Profile.findOne({ '_id': credentials.profile }).exec()
       const payload = {
@@ -83,7 +83,8 @@ module.exports.login = [
       }
       const token = jwt.sign(payload, process.env.JWT_KEY)
       const isContributor = credentials.isContributor
-      return res.status(200).send({ token, profile, isContributor })
+      const credentialsemail = credentials.email
+      return res.status(200).send({ token, profile, isContributor, email: credentialsemail })
     } catch (err) {
       return next(err)
     }
@@ -184,12 +185,11 @@ module.exports.updateProfile = [
         throw new Error('Validation failed')
       }
       const { username, bio } = req.body
-      if (username === req.user.profile._id) {
-        throw new Error('Unnecessary update')
-      }
-      const usernameInUse = await Profile.findOne({ 'username': username }).exec()
-      if (usernameInUse && usernameInUse !== req.user.profile) {
-        throw new Error('Username is already in use')
+      if (username !== req.user.profile.username) {
+        const usernameInUse = await Profile.findOne({ 'username': username }).exec()
+        if (usernameInUse) {
+          throw new Error('Username is already in use')
+        }
       }
       await Profile.findOneAndUpdate({ '_id': req.user.profile._id}, { 'username': username, 'url': getUrlString(username), 'bio': bio }).exec()
       return res.status(200).send({ message: 'Profile was updated' })
@@ -211,9 +211,11 @@ module.exports.updateCredentials = [
       }
       const { email, currentPassword, newPassword } = req.body
       const credentialsId = req.user._id
-      const emailInUse = await Credentials.findOne({ 'email': email }).exec()
-      if (emailInUse && emailInUse !== req.user) {
-        throw new Error('Email is already in use')
+      if (email !== req.user.email) {
+        const emailInUse = await Credentials.findOne({ 'email': email }).exec()
+        if (emailInUse) {
+          throw new Error('Email is already in use')
+        }
       }
       const hashedPassword = req.user.password
       const passwordsMatch = await bcrypt.compare(currentPassword, hashedPassword)
