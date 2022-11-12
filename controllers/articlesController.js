@@ -200,7 +200,7 @@ module.exports.publishArticle = async (req, res, next) => {
   try {
     const { articleId } = req.params
     const profile = req.user.profile._id
-    await Article.findOneAndUpdate({ 'url': articleId, 'profile': profile }, { 'isPublished': true }).exec()
+    await Article.findOneAndUpdate({ 'url': articleId, 'profile': profile }, { 'isPublished': true, 'datePublished': new Date() }).exec()
     return res.status(200).send({ message: 'Article was published' })
   } catch (err) {
     return next(err)
